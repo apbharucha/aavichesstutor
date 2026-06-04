@@ -4,7 +4,7 @@ async function getSupabaseClient() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !key) {
-    throw new Error("Missing Supabase environment variables");
+    throw new Error("Missing Supabase environment variables.");
   }
 
   return createClient(url, key);
@@ -14,6 +14,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "aavi123";
 
 export async function GET(req: Request) {
   try {
+    const supabase = await getSupabaseClient();
     const { searchParams } = new URL(req.url);
     const date = searchParams.get("date");
     const full = searchParams.get("full") === "1";
@@ -22,7 +23,6 @@ export async function GET(req: Request) {
       return Response.json(full ? { slots: [] } : { availableSlots: [] });
     }
 
-    const supabase = await getSupabaseClient();
     const { data, error } = await supabase
       .from("availability")
       .select("time_slot, is_available, is_booked")
@@ -57,14 +57,13 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const supabase = await getSupabaseClient();
     const body = await req.json();
     const { password, action, date, slots } = body;
 
     if (password !== ADMIN_PASSWORD) {
       return Response.json({ error: "Invalid password" }, { status: 401 });
     }
-
-    const supabase = await getSupabaseClient();
 
     if (action === "save_slots") {
       if (!date) return Response.json({ error: "Date is required" }, { status: 400 });

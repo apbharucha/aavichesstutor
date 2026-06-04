@@ -52,7 +52,7 @@ export default function AboutPage() {
                 ["Chess.com Rating", "2100"],
                 ["USCF Rating", "1700"],
                 ["Tournament Experience", "Competitive"],
-                ["Played Against Hikaru Nakamura", "Yes"],
+                ["Played Against Hikaru Nakamura", "played against and met top super grandmasters in the world"],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="text-sm text-slate-400">{label}</div>
