@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
 type LessonType = "Virtual" | "At Coach's House" | "At Student's House";
 type Duration = 1 | 1.5 | 2;
@@ -118,16 +118,6 @@ export default function ChessCoachLandingPage() {
 
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top,rgba(255,215,0,0.16),transparent_34%),linear-gradient(180deg,#0a1730_0%,#07111f_100%)]">
-        <div className="absolute inset-0 opacity-25">
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:64px_64px]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(59,130,246,0.18)_1px,transparent_1px)] bg-[size:22px_22px] animate-[boardPulse_8s_ease-in-out_infinite]" />
-        </div>
-
-        <div className="absolute left-8 top-16 text-5xl opacity-30 animate-[drift_12s_ease-in-out_infinite]">♞</div>
-        <div className="absolute right-12 top-28 text-6xl opacity-30 animate-[drift_14s_ease-in-out_infinite]">♛</div>
-        <div className="absolute left-1/3 bottom-10 text-4xl opacity-25 animate-[glide_10s_ease-in-out_infinite]">♟</div>
-        <div className="absolute right-1/3 bottom-24 text-4xl opacity-25 animate-[glide_12s_ease-in-out_infinite]">♜</div>
-
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-20 lg:grid-cols-[1.2fr_0.8fr] lg:py-28">
           <div className="max-w-3xl">
             <span className="inline-flex rounded-full border border-yellow-400/30 bg-yellow-400/10 px-4 py-1 text-sm font-medium text-yellow-200">
@@ -136,14 +126,27 @@ export default function ChessCoachLandingPage() {
             <h1 className="mt-6 text-5xl font-semibold tracking-tight sm:text-6xl">
               Improve Your Chess With Personalized Coaching
             </h1>
+            <p className="mt-5 max-w-2xl text-lg text-slate-300">
+              2100 Chess.com Rating • 1700 USCF Rating • Competitive Tournament Experience • Played Against Hikaru Nakamura
+            </p>
+
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#booking" className="rounded-full bg-blue-500 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:bg-blue-400">
+              <Link
+                href="#booking"
+                className="rounded-full bg-blue-500 px-8 py-3 font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:bg-blue-400"
+              >
                 Book Lesson
-              </a>
-              <Link href="/about" className="rounded-full border border-white/15 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10">
+              </Link>
+              <Link
+                href="/about"
+                className="rounded-full border border-white/15 bg-white/5 px-8 py-3 font-semibold text-white transition hover:bg-white/10"
+              >
                 About Coach
               </Link>
-              <Link href="/lessons" className="rounded-full border border-yellow-400/30 bg-yellow-400/10 px-6 py-3 font-semibold text-yellow-100 transition hover:bg-yellow-400/15">
+              <Link
+                href="/lessons"
+                className="rounded-full border border-yellow-400/30 bg-yellow-400/10 px-8 py-3 font-semibold text-yellow-100 transition hover:bg-yellow-400/15"
+              >
                 Lesson Types
               </Link>
             </div>
@@ -387,10 +390,11 @@ export default function ChessCoachLandingPage() {
           </div>
           <div>
             <div className="text-lg font-semibold">Navigation</div>
-            <div className="mt-3 flex gap-4 text-slate-300">
+            <div className="mt-3 flex flex-col gap-2 text-slate-300">
               <Link href="/about" className="hover:text-white">About</Link>
               <Link href="/lessons" className="hover:text-white">Lessons</Link>
               <Link href="/faq" className="hover:text-white">FAQ</Link>
+              <Link href="/admin/info" className="hover:text-white text-sm text-slate-400">Admin Info</Link>
             </div>
           </div>
         </div>
@@ -400,16 +404,13 @@ export default function ChessCoachLandingPage() {
 }
 
 function formatKey(date: Date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const y = date.getFullYear(); const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
-
 function money(value: number) {
   return `$${value.toFixed(2)}`;
 }
-
 async function submitBooking(form: BookingForm, selectedDate: Date, selectedSlot: string, total: number) {
   try {
     const response = await fetch("/api/bookings", {
@@ -430,7 +431,6 @@ async function submitBooking(form: BookingForm, selectedDate: Date, selectedSlot
         totalCost: total,
       }),
     });
-
     if (!response.ok) throw new Error("Booking failed");
     return await response.json();
   } catch (error) {

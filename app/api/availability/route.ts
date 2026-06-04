@@ -1,9 +1,13 @@
-function getSupabaseClient() {
-  const { createClient } = require("@supabase/supabase-js");
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+async function getSupabaseClient() {
+  const { createClient } = await import("@supabase/supabase-js");
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error("Missing Supabase environment variables");
+  }
+
+  return createClient(url, key);
 }
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "aavi123";
@@ -12,32 +16,41 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const date = searchParams.get("date");
+    const full = searchParams.get("full") === "1";
 
-    const supabase = getSupabaseClient();
-
-    if (date) {
-      const { data, error } = await supabase
-        .from("availability")
-        .select("time_slot, is_booked")
-        .eq("date", date)
-        .eq("is_available", true)
-        .order("time_slot");
-
-      if (error) throw error;
-
-      const availableSlots = data
-        .filter((slot: any) => !slot.is_booked)
-        .map((slot: any) => slot.time_slot);
-
-      return Response.json({ availableSlots });
+    if (!date) {
+      return Response.json(full ? { slots: [] } : { availableSlots: [] });
     }
 
-    return Response.json({ error: "Date parameter required" }, { status: 400 });
-  } catch (error) {
-    console.error("Availability error:", error);
+    const supabase = await getSupabaseClient();
+    const { data, error } = await supabase
+      .from("availability")
+      .select("time_slot, is_available, is_booked")
+      .eq("date", date)
+      .order("time_slot");
+
+    if (error) throw error;
+
+    const slots = (data ?? []).map((row: any) => ({
+      slot: row.time_slot,
+      available: Boolean(row.is_available),
+      booked: Boolean(row.is_booked),
+    }));
+
     return Response.json(
-      { error: error instanceof Error ? error.message : "Failed to fetch availability" },
-      { status: 500 }
+      full
+        ? { slots }
+        : {
+            availableSlots: slots
+              .filter((slot) => slot.available && !slot.booked)
+              .map((slot) => slot.slot),
+          }
+    );
+  } catch (error) {
+    console.error("Availability GET error:", error);
+    return Response.json(
+      { availableSlots: [], slots: [], error: error instanceof Error ? error.message : "Failed to load availability" },
+      { status: 200 }
     );
   }
 }
@@ -45,61 +58,38 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { password, action, date, timeSlots, slots } = body;
+    const { password, action, date, slots } = body;
 
     if (password !== ADMIN_PASSWORD) {
       return Response.json({ error: "Invalid password" }, { status: 401 });
     }
 
-    const supabase = getSupabaseClient();
+    const supabase = await getSupabaseClient();
 
-    if (action === "set_available") {
-      const slotsToInsert = timeSlots.map((time: string) => ({
+    if (action === "save_slots") {
+      if (!date) return Response.json({ error: "Date is required" }, { status: 400 });
+
+      await supabase.from("availability").delete().eq("date", date);
+
+      const rows = (slots ?? []).map((slot: { slot: string; booked: boolean }) => ({
         date,
-        time_slot: time,
+        time_slot: slot.slot,
         is_available: true,
-        is_booked: false,
+        is_booked: Boolean(slot.booked),
       }));
 
-      const { error } = await supabase
-        .from("availability")
-        .upsert(slotsToInsert, { onConflict: "date,time_slot" });
-
-      if (error) throw error;
+      if (rows.length > 0) {
+        const { error: insertError } = await supabase.from("availability").insert(rows);
+        if (insertError) throw insertError;
+      }
 
       return Response.json({ success: true, message: "Availability updated" });
     }
 
-    if (action === "update_booked_status") {
-      // Update booked status for each slot
-      for (const slot of slots) {
-        await supabase
-          .from("availability")
-          .update({ is_booked: slot.booked })
-          .eq("date", date)
-          .eq("time_slot", slot.slot);
-      }
-
-      return Response.json({ success: true, message: "Booked status updated" });
-    }
-
-    if (action === "remove_date") {
-      const { error } = await supabase
-        .from("availability")
-        .delete()
-        .eq("date", date);
-
-      if (error) throw error;
-
-      return Response.json({ success: true, message: "Date removed" });
-    }
-
     if (action === "block_date") {
-      const { error } = await supabase
-        .from("availability")
-        .delete()
-        .eq("date", date);
+      if (!date) return Response.json({ error: "Date is required" }, { status: 400 });
 
+      const { error } = await supabase.from("availability").delete().eq("date", date);
       if (error) throw error;
 
       return Response.json({ success: true, message: "Date blocked" });
@@ -107,7 +97,7 @@ export async function POST(req: Request) {
 
     return Response.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
-    console.error("Availability update error:", error);
+    console.error("Availability POST error:", error);
     return Response.json(
       { error: error instanceof Error ? error.message : "Failed to update availability" },
       { status: 500 }

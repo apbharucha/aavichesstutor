@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 
 export default function AboutPage() {
   return (
@@ -19,17 +18,14 @@ export default function AboutPage() {
       </nav>
 
       <section className="mx-auto max-w-7xl px-6 py-20">
-        <div className="grid gap-8 lg:grid-cols-[1fr_1.2fr]">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 h-fit">
-            <div className="aspect-[3/4] rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(59,130,246,0.35),rgba(234,179,8,0.18))] overflow-hidden">
-              <Image
+        <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr]">
+          {/* Photo - Fixed container to show full image */}
+          <div className="h-fit">
+            <div className="w-full overflow-hidden rounded-3xl border border-white/10 bg-black/20 p-4">
+              <img
                 src="/aavi-nationals.jpg"
                 alt="Aavi at K-8 Nationals in Atlanta"
-                width={600}
-                height={800}
-                className="w-full h-full object-cover"
-                priority
-                quality={95}
+                className="block h-auto w-full rounded-2xl object-contain"
               />
             </div>
             <p className="mt-4 text-center text-sm text-slate-400">
@@ -37,6 +33,7 @@ export default function AboutPage() {
             </p>
           </div>
 
+          {/* Content */}
           <div>
             <h1 className="text-4xl font-semibold">About Coach Aavi</h1>
             
