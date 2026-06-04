@@ -1,7 +1,14 @@
 {
-  "name": "chesstutorwebsite",
+  "name": "aavichesstutor",
   "version": "1.0.0",
+  "description": "Modern chess coaching booking platform",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apbharucha/aavichesstutor.git"
+  },
+  "author": "Aavi Bharucha",
+  "license": "MIT",
   "dependencies": {
     "next": "latest",
     "react": "latest",
