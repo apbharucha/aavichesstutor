@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
+const ADMIN_PASSWORD = "aavi123";
+
 const TIME_SLOTS = [
   "9:00 AM",
   "10:00 AM",
@@ -53,7 +55,7 @@ export default function AdminPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === (process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "aavi123")) {
+    if (password === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
       setMessage("Logged in successfully");
       setPassword("");
@@ -84,7 +86,7 @@ export default function AdminPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          password,
+          password: ADMIN_PASSWORD,
           action: "save_slots",
           date: selectedDate,
           slots: payloadSlots,
@@ -114,7 +116,7 @@ export default function AdminPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          password,
+          password: ADMIN_PASSWORD,
           action: "block_date",
           date: selectedDate,
         }),

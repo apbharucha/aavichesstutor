@@ -67,7 +67,7 @@ export default function AboutPage() {
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <p className="font-semibold text-white">Assistant Coach</p>
                   <p className="text-sm">Fallon Chess Club & Emerald Hills Chess Club</p>
-                  <p className="text-sm text-slate-400">Top Level Class</p>
+                  <p className="text-sm text-slate-400">Top Level Class (Elite class)</p>
                 </div>
               </div>
             </div>
