@@ -3,17 +3,39 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "env": [
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "SUPABASE_SERVICE_ROLE_KEY",
-    "RESEND_API_KEY",
-    "TWILIO_ACCOUNT_SID",
-    "TWILIO_AUTH_TOKEN",
-    "TWILIO_PHONE_NUMBER",
-    "AAVI_PHONE_NUMBER",
-    "GOOGLE_CLIENT_ID",
-    "GOOGLE_CLIENT_SECRET",
-    "GOOGLE_REDIRECT_URI",
-    "GOOGLE_REFRESH_TOKEN"
-  ]
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": {
+      "description": "Supabase project URL"
+    },
+    "SUPABASE_SERVICE_ROLE_KEY": {
+      "description": "Supabase service role key"
+    },
+    "RESEND_API_KEY": {
+      "description": "Resend API key for emails"
+    },
+    "TWILIO_ACCOUNT_SID": {
+      "description": "Twilio account SID"
+    },
+    "TWILIO_AUTH_TOKEN": {
+      "description": "Twilio auth token"
+    },
+    "TWILIO_PHONE_NUMBER": {
+      "description": "Twilio phone number"
+    },
+    "AAVI_PHONE_NUMBER": {
+      "description": "Aavi phone number"
+    },
+    "GOOGLE_CLIENT_ID": {
+      "description": "Google client ID"
+    },
+    "GOOGLE_CLIENT_SECRET": {
+      "description": "Google client secret"
+    },
+    "GOOGLE_REDIRECT_URI": {
+      "description": "Google redirect URI"
+    },
+    "GOOGLE_REFRESH_TOKEN": {
+      "description": "Google refresh token"
+    }
+  }
 }
