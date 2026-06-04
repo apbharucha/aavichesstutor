@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 
 type LessonType = "Virtual" | "At Coach's House" | "At Student's House";
 type Duration = 1 | 1.5 | 2;
@@ -8,6 +9,7 @@ type Duration = 1 | 1.5 | 2;
 type BookingForm = {
   parentName: string;
   studentName: string;
+  numberOfStudents: number;
   email: string;
   phone: string;
   lessonType: LessonType;
@@ -24,64 +26,6 @@ const availability: Record<string, string[]> = {
   "2026-06-24": ["4:30 PM", "5:30 PM"],
 };
 
-const testimonials = [
-  "Aavi helped me gain 300 rating points in three months.",
-  "My tactical vision improved significantly.",
-];
-
-const faqs = [
-  ["What rating levels do you teach?", "Beginners to intermediate tournament players."],
-  ["Are lessons online?", "Yes."],
-  ["Do you travel?", "Yes, for $45/hour lessons."],
-  ["How do payments work?", "Venmo, Zelle, Cash, etc."],
-];
-
-const lessonCards = [
-  { title: "Virtual Lessons", meta: "Zoom / Google Meet", price: "$40/hour" },
-  { title: "At My House", meta: "In-person", price: "$40/hour" },
-  { title: "At Your House", meta: "Travel included", price: "$45/hour" },
-];
-
-function formatKey(date: Date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-function money(value: number) {
-  return `$${value.toFixed(2)}`;
-}
-
-async function submitBooking(form: BookingForm, selectedDate: Date, selectedSlot: string, total: number) {
-  try {
-    // Call backend API to handle Supabase, Resend, Twilio, and Google Calendar
-    const response = await fetch("/api/bookings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        parentName: form.parentName,
-        studentName: form.studentName,
-        email: form.email,
-        phone: form.phone,
-        lessonType: form.lessonType,
-        lessonLength: form.lessonLength,
-        address: form.address,
-        notes: form.notes,
-        date: selectedDate.toISOString().split("T")[0],
-        time: selectedSlot,
-        totalCost: total,
-      }),
-    });
-
-    if (!response.ok) throw new Error("Booking failed");
-    return await response.json();
-  } catch (error) {
-    console.error("Error submitting booking:", error);
-    throw error;
-  }
-}
-
 export default function ChessCoachLandingPage() {
   const viewMonth = new Date(2026, 5, 1);
   const [selectedDate, setSelectedDate] = useState(new Date(2026, 5, 15));
@@ -90,6 +34,7 @@ export default function ChessCoachLandingPage() {
   const [form, setForm] = useState<BookingForm>({
     parentName: "",
     studentName: "",
+    numberOfStudents: 1,
     email: "",
     phone: "",
     lessonType: "Virtual",
@@ -108,8 +53,10 @@ export default function ChessCoachLandingPage() {
 
   const total = useMemo(() => {
     const rate = form.lessonType === "At Student's House" ? 45 : 40;
-    return rate * Number(form.lessonLength);
-  }, [form.lessonType, form.lessonLength]);
+    const basePrice = rate * Number(form.lessonLength);
+    const extraStudentCost = (form.numberOfStudents - 1) * 25;
+    return basePrice + extraStudentCost;
+  }, [form.lessonType, form.lessonLength, form.numberOfStudents]);
 
   const daysInMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0).getDate();
   const firstDay = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1).getDay();
@@ -124,6 +71,7 @@ export default function ChessCoachLandingPage() {
         setForm({
           parentName: "",
           studentName: "",
+          numberOfStudents: 1,
           email: "",
           phone: "",
           lessonType: "Virtual",
@@ -143,39 +91,6 @@ export default function ChessCoachLandingPage() {
 
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
-      <style jsx global>{`
-        @keyframes drift {
-          0% {
-            transform: translate3d(0, 0, 0) rotate(0deg);
-          }
-          50% {
-            transform: translate3d(16px, -18px, 0) rotate(8deg);
-          }
-          100% {
-            transform: translate3d(0, 0, 0) rotate(0deg);
-          }
-        }
-        @keyframes glide {
-          0% {
-            transform: translateX(-20px);
-          }
-          50% {
-            transform: translateX(20px);
-          }
-          100% {
-            transform: translateX(-20px);
-          }
-        }
-        @keyframes boardPulse {
-          0%, 100% {
-            opacity: 0.3;
-          }
-          50% {
-            opacity: 0.55;
-          }
-        }
-      `}</style>
-
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top,rgba(255,215,0,0.16),transparent_34%),linear-gradient(180deg,#0a1730_0%,#07111f_100%)]">
         <div className="absolute inset-0 opacity-25">
@@ -196,19 +111,16 @@ export default function ChessCoachLandingPage() {
             <h1 className="mt-6 text-5xl font-semibold tracking-tight sm:text-6xl">
               Improve Your Chess With Personalized Coaching
             </h1>
-            <p className="mt-5 max-w-2xl text-lg text-slate-300">
-              2100 Chess.com Rating • 1700 USCF Rating • Competitive Tournament Experience • Played Against Hikaru Nakamura
-            </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a href="#booking" className="rounded-full bg-blue-500 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:bg-blue-400">
                 Book Lesson
               </a>
-              <a href="#contact" className="rounded-full border border-white/15 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10">
-                Contact Coach
-              </a>
-              <a href="#about" className="rounded-full border border-yellow-400/30 bg-yellow-400/10 px-6 py-3 font-semibold text-yellow-100 transition hover:bg-yellow-400/15">
+              <Link href="/about" className="rounded-full border border-white/15 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10">
                 About Coach
-              </a>
+              </Link>
+              <Link href="/lessons" className="rounded-full border border-yellow-400/30 bg-yellow-400/10 px-6 py-3 font-semibold text-yellow-100 transition hover:bg-yellow-400/15">
+                Lesson Types
+              </Link>
             </div>
           </div>
 
@@ -224,76 +136,17 @@ export default function ChessCoachLandingPage() {
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-7xl opacity-20">
               ♞ ♛ ♜ ♟
             </div>
-            <div className="mt-4 rounded-2xl border border-yellow-400/20 bg-gradient-to-r from-yellow-400/10 to-blue-500/10 p-4 text-sm text-slate-200">
-              Elegant blue/gold theme with subtle board texture, floating pieces, and a coaching-first booking flow.
-            </div>
           </div>
-        </div>
-      </section>
-
-      {/* About */}
-      <section id="about" className="mx-auto max-w-7xl px-6 py-20">
-        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <div className="aspect-[4/5] rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(59,130,246,0.35),rgba(234,179,8,0.18))] p-6">
-              <div className="flex h-full items-center justify-center rounded-2xl border border-white/10 bg-[#07111f]/70 text-center text-3xl font-semibold">
-                Aavi
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-3xl font-semibold">About Coach</h2>
-            <p className="mt-4 max-w-2xl text-slate-300">
-              Hi, I'm Aavi. I help beginner and intermediate players improve their tactical vision, positional understanding, opening preparation, and endgame technique through personalized lessons.
-            </p>
-
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {[
-                ["Chess.com Rating", "2100"],
-                ["USCF Rating", "1700"],
-                ["Tournament Experience", "Competitive"],
-                ["Played Against Hikaru Nakamura", "Yes"],
-              ].map(([label, value]) => (
-                <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <div className="text-sm text-slate-400">{label}</div>
-                  <div className="mt-2 text-2xl font-semibold text-yellow-100">{value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Lessons */}
-      <section className="mx-auto max-w-7xl px-6 pb-20">
-        <h2 className="text-3xl font-semibold">Lesson Types</h2>
-        <div className="mt-6 grid gap-5 md:grid-cols-3">
-          {lessonCards.map((card) => (
-            <div key={card.title} className="rounded-3xl border border-white/10 bg-white/5 p-6">
-              <div className="text-xl font-semibold">{card.title}</div>
-              <div className="mt-2 text-slate-300">{card.meta}</div>
-              <div className="mt-6 inline-flex rounded-full border border-yellow-400/25 bg-yellow-400/10 px-4 py-2 text-lg font-semibold text-yellow-100">
-                {card.price}
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
       {/* Booking */}
-      <section id="booking" className="mx-auto max-w-7xl px-6 pb-20">
+      <section id="booking" className="mx-auto max-w-7xl px-6 py-20">
         <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
+          {/* Calendar */}
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-semibold">Booking Calendar</h2>
-                <p className="mt-2 text-slate-300">Monthly view with live availability.</p>
-              </div>
-              <div className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm text-slate-300">
-                June 2026
-              </div>
-            </div>
+            <h2 className="text-3xl font-semibold">Booking Calendar</h2>
+            <p className="mt-2 text-slate-300">Select your preferred date and time</p>
 
             <div className="mt-6 grid grid-cols-7 gap-2 text-center text-xs uppercase tracking-[0.2em] text-slate-400">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
@@ -364,7 +217,8 @@ export default function ChessCoachLandingPage() {
             </div>
           </div>
 
-          <form id="booking-form" onSubmit={handleSubmit} className="rounded-3xl border border-white/10 bg-white/5 p-6">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="rounded-3xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-3xl font-semibold">Booking Form</h2>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {[
@@ -379,10 +233,23 @@ export default function ChessCoachLandingPage() {
                     required
                     value={(form as any)[key]}
                     onChange={(e) => setForm({ ...form, [key]: e.target.value } as BookingForm)}
-                    className="rounded-2xl border border-white/10 bg-[#07111f] px-4 py-3 outline-none ring-0 placeholder:text-slate-500"
+                    className="rounded-2xl border border-white/10 bg-[#07111f] px-4 py-3 outline-none"
                   />
                 </label>
               ))}
+
+              <label className="grid gap-2">
+                <span className="text-sm text-slate-300">Number of Students</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  required
+                  value={form.numberOfStudents}
+                  onChange={(e) => setForm({ ...form, numberOfStudents: Number(e.target.value) })}
+                  className="rounded-2xl border border-white/10 bg-[#07111f] px-4 py-3 outline-none"
+                />
+              </label>
 
               <label className="grid gap-2">
                 <span className="text-sm text-slate-300">Lesson Type</span>
@@ -453,13 +320,15 @@ export default function ChessCoachLandingPage() {
 
             <div className="mt-6 rounded-2xl border border-yellow-400/20 bg-yellow-400/10 p-5">
               <div className="text-sm uppercase tracking-[0.2em] text-yellow-200">Automatic Pricing</div>
-              <div className="mt-2 text-3xl font-semibold text-yellow-100">{money(total)}</div>
+              <div className="mt-2 text-3xl font-semibold text-yellow-100">${total.toFixed(2)}</div>
               <div className="mt-2 text-sm text-slate-300">
-                Virtual: $40 × hours • My House: $40 × hours • Your House: $45 × hours
+                Base: ${form.lessonType === "At Student's House" ? 45 : 40}/hour • Extra students: $25 each
               </div>
-              <div className="mt-3 text-sm text-slate-300">
-                Examples: 1 hour virtual = $40 • 1.5 hour home visit = $67.50 • 2 hour home visit = $90
-              </div>
+              {form.numberOfStudents > 1 && (
+                <div className="mt-2 text-sm text-slate-300">
+                  {form.numberOfStudents - 1} additional student{form.numberOfStudents > 2 ? "s" : ""}: ${((form.numberOfStudents - 1) * 25).toFixed(2)}
+                </div>
+              )}
             </div>
 
             <button
@@ -472,67 +341,15 @@ export default function ChessCoachLandingPage() {
 
             {submitted && (
               <div className="mt-4 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-emerald-100">
-                Booking submitted. Backend hooks can send email to aavipb07@gmail.com, create a Google Calendar event, notify via SMS, and mark the slot unavailable immediately.
+                Booking submitted! Check your email for confirmation.
               </div>
             )}
           </form>
         </div>
       </section>
 
-      {/* Testimonials / FAQ / Workflow */}
-      <section className="mx-auto max-w-7xl px-6 pb-20">
-        <div className="grid gap-8 lg:grid-cols-3">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <h3 className="text-2xl font-semibold">Testimonials</h3>
-            <div className="mt-4 space-y-4">
-              {testimonials.map((t) => (
-                <div key={t} className="rounded-2xl border border-white/10 bg-black/20 p-4 text-slate-200">
-                  “{t}”
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <h3 className="text-2xl font-semibold">FAQ</h3>
-            <div className="mt-4 space-y-4">
-              {faqs.map(([q, a]) => (
-                <div key={q} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <div className="font-medium">{q}</div>
-                  <div className="mt-2 text-slate-300">{a}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <h3 className="text-2xl font-semibold">Technical Workflow</h3>
-            <ol className="mt-4 space-y-3 text-slate-300">
-              {[
-                "User chooses date",
-                "System checks database",
-                "Available slots shown in blue",
-                "User selects slot",
-                "Completes booking form",
-                "Price automatically calculated",
-                "Booking stored in database",
-                "Email sent to Aavi",
-                "SMS notification sent to Aavi",
-                "Confirmation email sent to customer",
-                "Slot becomes grey/unavailable",
-              ].map((step, i) => (
-                <li key={step} className="flex gap-3">
-                  <span className="text-yellow-200">{i + 1}.</span>
-                  <span>{step}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
-      <footer id="contact" className="border-t border-white/10 bg-black/20">
+      <footer className="border-t border-white/10 bg-black/20">
         <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 md:grid-cols-3">
           <div>
             <div className="text-lg font-semibold">Contact</div>
@@ -544,11 +361,55 @@ export default function ChessCoachLandingPage() {
             <div className="mt-3 text-slate-300">Monday–Sunday by appointment</div>
           </div>
           <div>
-            <div className="text-lg font-semibold">Suggested Stack</div>
-            <div className="mt-3 text-slate-300">Next.js • Tailwind CSS • Supabase • FullCalendar • Resend • Twilio • Vercel</div>
+            <div className="text-lg font-semibold">Navigation</div>
+            <div className="mt-3 flex gap-4 text-slate-300">
+              <Link href="/about" className="hover:text-white">About</Link>
+              <Link href="/lessons" className="hover:text-white">Lessons</Link>
+              <Link href="/faq" className="hover:text-white">FAQ</Link>
+            </div>
           </div>
         </div>
       </footer>
     </main>
   );
+}
+
+function formatKey(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function money(value: number) {
+  return `$${value.toFixed(2)}`;
+}
+
+async function submitBooking(form: BookingForm, selectedDate: Date, selectedSlot: string, total: number) {
+  try {
+    const response = await fetch("/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        parentName: form.parentName,
+        studentName: form.studentName,
+        numberOfStudents: form.numberOfStudents,
+        email: form.email,
+        phone: form.phone,
+        lessonType: form.lessonType,
+        lessonLength: form.lessonLength,
+        address: form.address,
+        notes: form.notes,
+        date: selectedDate.toISOString().split("T")[0],
+        time: selectedSlot,
+        totalCost: total,
+      }),
+    });
+
+    if (!response.ok) throw new Error("Booking failed");
+    return await response.json();
+  } catch (error) {
+    console.error("Error submitting booking:", error);
+    throw error;
+  }
 }
