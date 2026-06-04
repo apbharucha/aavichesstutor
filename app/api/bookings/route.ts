@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import ical from "ical-generator";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -90,19 +89,19 @@ export async function POST(req: Request) {
       `,
     });
 
-    // Generate iCal file for calendar import
-    const cal = ical({ name: "Chess Lesson" });
-    const [year, month, day] = date.split("-");
-    const startTime = new Date(`${year}-${month}-${day}T${convertTo24Hour(time)}`);
-    const endTime = new Date(startTime.getTime() + lessonLength * 60 * 60 * 1000);
-
-    cal.createEvent({
-      start: startTime,
-      end: endTime,
-      summary: `Chess Lesson: ${studentName}`,
-      description: `${lessonType}\nParent: ${parentName}\nEmail: ${email}\nPhone: ${phone}\nNotes: ${notes}`,
-      location: address || "Virtual",
-    });
+    // Generate iCal content
+    const icalContent = generateICalendar(
+      studentName,
+      parentName,
+      email,
+      phone,
+      lessonType,
+      address,
+      notes,
+      date,
+      time,
+      lessonLength
+    );
 
     // Send calendar file as attachment to customer
     await resend.emails.send({
@@ -113,7 +112,7 @@ export async function POST(req: Request) {
       attachments: [
         {
           filename: `chess-lesson-${date}.ics`,
-          content: cal.toString(),
+          content: icalContent,
         },
       ],
     });
@@ -140,4 +139,43 @@ function convertTo24Hour(time12h: string): string {
   if (period === "AM" && hours === 12) hours = 0;
 
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+function generateICalendar(
+  studentName: string,
+  parentName: string,
+  email: string,
+  phone: string,
+  lessonType: string,
+  address: string,
+  notes: string,
+  date: string,
+  time: string,
+  lessonLength: number
+): string {
+  const [year, month, day] = date.split("-");
+  const startTime = new Date(`${year}-${month}-${day}T${convertTo24Hour(time)}`);
+  const endTime = new Date(startTime.getTime() + lessonLength * 60 * 60 * 1000);
+
+  const uid = `chess-lesson-${date}-${time.replace(/[: ]/g, "")}@chesstutoring.com`;
+
+  return `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Aavi Chess Tutor//chesstutoring.com//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Chess Lesson
+X-WR-TIMEZONE:UTC
+BEGIN:VEVENT
+UID:${uid}
+DTSTAMP:${new Date().toISOString().replace(/[:-]/g, "").split(".")[0]}Z
+DTSTART:${startTime.toISOString().replace(/[:-]/g, "").split(".")[0]}Z
+DTEND:${endTime.toISOString().replace(/[:-]/g, "").split(".")[0]}Z
+SUMMARY:Chess Lesson: ${studentName}
+DESCRIPTION:Lesson Type: ${lessonType}\\nParent: ${parentName}\\nEmail: ${email}\\nPhone: ${phone}\\nNotes: ${notes}
+LOCATION:${address || "Virtual"}
+ORGANIZER;CN=Aavi Chess Tutor:mailto:aavipb07@gmail.com
+ATTENDEE;CN=${parentName}:mailto:${email}
+END:VEVENT
+END:VCALENDAR`;
 }
