@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
     if (insertError) throw new Error(`Database error: ${insertError.message}`);
 
-    // Send email to Aavi via Resend
+    // Send email to Aavi
     await resend.emails.send({
       from: "noreply@chesstutoring.com",
       to: "aavipb07@gmail.com",
@@ -90,38 +90,7 @@ export async function POST(req: Request) {
       `,
     });
 
-    // Send Discord notification to Aavi (free alternative to SMS)
-    if (process.env.DISCORD_WEBHOOK_URL) {
-      await fetch(process.env.DISCORD_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: "Chess Tutor Bookings",
-          avatar_url: "https://cdn-icons-png.flaticon.com/512/881/881294.png",
-          embeds: [
-            {
-              color: 3447003,
-              title: `New Lesson Booking: ${studentName}`,
-              fields: [
-                { name: "Parent", value: parentName, inline: true },
-                { name: "Student", value: studentName, inline: true },
-                { name: "Email", value: email, inline: false },
-                { name: "Phone", value: phone, inline: true },
-                { name: "Lesson Type", value: lessonType, inline: true },
-                { name: "Date & Time", value: `${date} at ${time}`, inline: false },
-                { name: "Duration", value: `${lessonLength} hours`, inline: true },
-                { name: "Total Cost", value: `$${totalCost.toFixed(2)}`, inline: true },
-                { name: "Address", value: address || "Virtual", inline: false },
-                { name: "Notes", value: notes || "None", inline: false },
-              ],
-              timestamp: new Date().toISOString(),
-            },
-          ],
-        }),
-      });
-    }
-
-    // Generate iCal file for calendar import (free alternative to Google Calendar API)
+    // Generate iCal file for calendar import
     const cal = ical({ name: "Chess Lesson" });
     const [year, month, day] = date.split("-");
     const startTime = new Date(`${year}-${month}-${day}T${convertTo24Hour(time)}`);
@@ -135,7 +104,7 @@ export async function POST(req: Request) {
       location: address || "Virtual",
     });
 
-    // Send calendar file as attachment
+    // Send calendar file as attachment to customer
     await resend.emails.send({
       from: "noreply@chesstutoring.com",
       to: email,
@@ -152,7 +121,7 @@ export async function POST(req: Request) {
     return Response.json({
       success: true,
       booking,
-      message: "Booking confirmed. Emails sent, Discord notification delivered, and calendar file created.",
+      message: "Booking confirmed. Confirmation emails sent and calendar file created.",
     });
   } catch (error) {
     console.error("Booking error:", error);

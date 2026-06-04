@@ -10,15 +10,17 @@
   "author": "Aavi Bharucha",
   "license": "MIT",
   "dependencies": {
+    "@supabase/supabase-js": "latest",
+    "ical-generator": "latest",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "tailwindcss": "latest",
-    "@supabase/supabase-js": "latest",
     "resend": "latest",
-    "ical-generator": "latest"
+    "tailwindcss": "latest"
   },
   "devDependencies": {
+    "@types/node": "25.9.1",
+    "@types/react": "19.2.16",
     "autoprefixer": "latest",
     "postcss": "latest",
     "typescript": "latest"
