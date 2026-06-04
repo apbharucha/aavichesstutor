@@ -18,14 +18,6 @@ type BookingForm = {
   notes: string;
 };
 
-const availability: Record<string, string[]> = {
-  "2026-06-15": ["3:00 PM", "4:00 PM", "5:00 PM"],
-  "2026-06-16": [],
-  "2026-06-18": ["2:00 PM", "3:30 PM", "6:00 PM"],
-  "2026-06-21": ["10:00 AM", "12:00 PM"],
-  "2026-06-24": ["4:30 PM", "5:30 PM"],
-};
-
 export default function ChessCoachLandingPage() {
   const viewMonth = new Date(2026, 5, 1);
   const [selectedDate, setSelectedDate] = useState(new Date(2026, 5, 15));
@@ -42,6 +34,7 @@ export default function ChessCoachLandingPage() {
     address: "",
     notes: "",
   });
+  const [availability, setAvailability] = useState<Record<string, string[]>>({});
 
   const selectedKey = formatKey(selectedDate);
   const availableSlots = availability[selectedKey] ?? [];
@@ -49,6 +42,23 @@ export default function ChessCoachLandingPage() {
 
   useEffect(() => {
     setSelectedSlot(availableSlots[0] ?? "");
+  }, [selectedKey]);
+
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      try {
+        const response = await fetch(`/api/availability?date=${selectedKey}`);
+        const data = await response.json();
+        setAvailability((prev) => ({
+          ...prev,
+          [selectedKey]: data.availableSlots || [],
+        }));
+      } catch (error) {
+        console.error("Failed to fetch availability:", error);
+      }
+    };
+
+    fetchAvailability();
   }, [selectedKey]);
 
   const total = useMemo(() => {

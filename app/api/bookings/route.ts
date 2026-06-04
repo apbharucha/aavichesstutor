@@ -18,6 +18,7 @@ export async function POST(req: Request) {
     const {
       parentName,
       studentName,
+      numberOfStudents,
       email,
       phone,
       lessonType,
@@ -35,6 +36,7 @@ export async function POST(req: Request) {
       .insert({
         parent_name: parentName,
         student_name: studentName,
+        number_of_students: numberOfStudents,
         email,
         phone,
         lesson_type: lessonType,
@@ -52,6 +54,13 @@ export async function POST(req: Request) {
 
     if (insertError) throw new Error(`Database error: ${insertError.message}`);
 
+    // Mark time slot as booked in availability table
+    await supabase
+      .from("availability")
+      .update({ is_booked: true })
+      .eq("date", date)
+      .eq("time_slot", time);
+
     // Send email to Aavi
     await resend.emails.send({
       from: "noreply@chesstutoring.com",
@@ -61,6 +70,7 @@ export async function POST(req: Request) {
         <h2>New Booking Received</h2>
         <p><strong>Parent Name:</strong> ${parentName}</p>
         <p><strong>Student Name:</strong> ${studentName}</p>
+        <p><strong>Number of Students:</strong> ${numberOfStudents}</p>
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Phone:</strong> ${phone}</p>
         <p><strong>Lesson Type:</strong> ${lessonType}</p>
@@ -92,38 +102,10 @@ export async function POST(req: Request) {
       `,
     });
 
-    // Generate iCal content
-    const icalContent = generateICalendar(
-      studentName,
-      parentName,
-      email,
-      phone,
-      lessonType,
-      address,
-      notes,
-      date,
-      time,
-      lessonLength
-    );
-
-    // Send calendar file as attachment to customer
-    await resend.emails.send({
-      from: "noreply@chesstutoring.com",
-      to: email,
-      subject: "Add to Calendar - Chess Lesson Booking",
-      html: `<p>You can import the attached calendar file into Google Calendar, Outlook, or Apple Calendar.</p>`,
-      attachments: [
-        {
-          filename: `chess-lesson-${date}.ics`,
-          content: icalContent,
-        },
-      ],
-    });
-
     return Response.json({
       success: true,
       booking,
-      message: "Booking confirmed. Confirmation emails sent and calendar file created.",
+      message: "Booking confirmed.",
     });
   } catch (error) {
     console.error("Booking error:", error);

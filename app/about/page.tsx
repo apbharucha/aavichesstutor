@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function AboutPage() {
   return (
@@ -19,15 +20,30 @@ export default function AboutPage() {
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <div className="aspect-[4/5] rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(59,130,246,0.35),rgba(234,179,8,0.18))] p-6">
-              <div className="flex h-full items-center justify-center rounded-2xl border border-white/10 bg-[#07111f]/70 text-center text-3xl font-semibold">
-                Aavi
-              </div>
+            <div className="aspect-[4/5] rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(59,130,246,0.35),rgba(234,179,8,0.18))] overflow-hidden">
+              <Image
+                src="/aavi-nationals.jpg"
+                alt="Aavi at K-8 Nationals in Atlanta"
+                width={400}
+                height={500}
+                className="w-full h-full object-cover"
+                priority
+              />
             </div>
+            <p className="mt-4 text-center text-sm text-slate-400">
+              At K-8 Nationals 2 years ago in Atlanta — 3rd Place Prize
+            </p>
           </div>
 
           <div>
             <h1 className="text-4xl font-semibold">About Coach Aavi</h1>
+            
+            <div className="mt-4 rounded-2xl border border-blue-400/20 bg-blue-400/10 p-4">
+              <p className="text-sm text-blue-100">
+                <strong>Sophomore (10th Grade)</strong> • Emerald High School, Dublin, CA
+              </p>
+            </div>
+
             <p className="mt-6 max-w-2xl text-lg text-slate-300">
               Hi, I'm Aavi. I help beginner and intermediate players improve their tactical vision, positional understanding, opening preparation, and endgame technique through personalized lessons.
             </p>
@@ -48,6 +64,17 @@ export default function AboutPage() {
 
             <div className="mt-12">
               <h2 className="text-2xl font-semibold">Teaching Experience</h2>
+              <div className="mt-4 space-y-3 text-slate-300">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="font-semibold text-white">Assistant Coach</p>
+                  <p className="text-sm">Fallon Chess Club & Emerald Hills Chess Club</p>
+                  <p className="text-sm text-slate-400">Top Level Class</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <h2 className="text-2xl font-semibold">Skills I Teach</h2>
               <ul className="mt-4 space-y-3 text-slate-300">
                 <li>✓ Tactical Vision Development</li>
                 <li>✓ Positional Understanding</li>
