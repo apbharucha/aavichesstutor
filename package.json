@@ -1,0 +1,32 @@
+{
+  "name": "chesstutorwebsite",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "tailwindcss": "latest",
+    "@supabase/supabase-js": "latest",
+    "resend": "latest",
+    "twilio": "latest",
+    "googleapis": "latest"
+  },
+  "devDependencies": {
+    "autoprefixer": "latest",
+    "postcss": "latest",
+    "typescript": "latest"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "eslintConfig": {
+    "extends": "next/core-web-vitals"
+  },
+  "nextConfig": {
+    "reactStrictMode": true
+  }
+}
