@@ -16,8 +16,7 @@
     "tailwindcss": "latest",
     "@supabase/supabase-js": "latest",
     "resend": "latest",
-    "twilio": "latest",
-    "googleapis": "latest"
+    "ical-generator": "latest"
   },
   "devDependencies": {
     "autoprefixer": "latest",

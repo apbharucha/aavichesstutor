@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import twilio from "twilio";
-import { google } from "googleapis";
+import ical from "ical-generator";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,23 +8,6 @@ const supabase = createClient(
 );
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
-
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID!,
-  process.env.TWILIO_AUTH_TOKEN!
-);
-
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID!,
-  process.env.GOOGLE_CLIENT_SECRET!,
-  process.env.GOOGLE_REDIRECT_URI!
-);
-
-oauth2Client.setCredentials({
-  refresh_token: process.env.GOOGLE_REFRESH_TOKEN!,
-});
-
-const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
 export async function POST(req: Request) {
   try {
@@ -68,11 +50,10 @@ export async function POST(req: Request) {
 
     if (insertError) throw new Error(`Database error: ${insertError.message}`);
 
-    // Send email to Aavi
-    const aaviBcc = "aavipb07@gmail.com";
+    // Send email to Aavi via Resend
     await resend.emails.send({
       from: "noreply@chesstutoring.com",
-      to: aaviBcc,
+      to: "aavipb07@gmail.com",
       subject: `New Chess Lesson Booking: ${studentName}`,
       html: `
         <h2>New Booking Received</h2>
@@ -109,33 +90,69 @@ export async function POST(req: Request) {
       `,
     });
 
-    // Send SMS notification to Aavi
-    await twilioClient.messages.create({
-      body: `New lesson booking: ${studentName} on ${date} at ${time}. Total: $${totalCost.toFixed(2)}. Check email for details.`,
-      from: process.env.TWILIO_PHONE_NUMBER!,
-      to: process.env.AAVI_PHONE_NUMBER!,
-    });
+    // Send Discord notification to Aavi (free alternative to SMS)
+    if (process.env.DISCORD_WEBHOOK_URL) {
+      await fetch(process.env.DISCORD_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: "Chess Tutor Bookings",
+          avatar_url: "https://cdn-icons-png.flaticon.com/512/881/881294.png",
+          embeds: [
+            {
+              color: 3447003,
+              title: `New Lesson Booking: ${studentName}`,
+              fields: [
+                { name: "Parent", value: parentName, inline: true },
+                { name: "Student", value: studentName, inline: true },
+                { name: "Email", value: email, inline: false },
+                { name: "Phone", value: phone, inline: true },
+                { name: "Lesson Type", value: lessonType, inline: true },
+                { name: "Date & Time", value: `${date} at ${time}`, inline: false },
+                { name: "Duration", value: `${lessonLength} hours`, inline: true },
+                { name: "Total Cost", value: `$${totalCost.toFixed(2)}`, inline: true },
+                { name: "Address", value: address || "Virtual", inline: false },
+                { name: "Notes", value: notes || "None", inline: false },
+              ],
+              timestamp: new Date().toISOString(),
+            },
+          ],
+        }),
+      });
+    }
 
-    // Create Google Calendar event
+    // Generate iCal file for calendar import (free alternative to Google Calendar API)
+    const cal = ical({ name: "Chess Lesson" });
     const [year, month, day] = date.split("-");
     const startTime = new Date(`${year}-${month}-${day}T${convertTo24Hour(time)}`);
     const endTime = new Date(startTime.getTime() + lessonLength * 60 * 60 * 1000);
 
-    await calendar.events.insert({
-      calendarId: "primary",
-      requestBody: {
-        summary: `Chess Lesson: ${studentName}`,
-        description: `${lessonType}\nParent: ${parentName}\nEmail: ${email}\nPhone: ${phone}\nNotes: ${notes}`,
-        start: { dateTime: startTime.toISOString() },
-        end: { dateTime: endTime.toISOString() },
-        location: address || "Virtual",
-      },
+    cal.createEvent({
+      start: startTime,
+      end: endTime,
+      summary: `Chess Lesson: ${studentName}`,
+      description: `${lessonType}\nParent: ${parentName}\nEmail: ${email}\nPhone: ${phone}\nNotes: ${notes}`,
+      location: address || "Virtual",
+    });
+
+    // Send calendar file as attachment
+    await resend.emails.send({
+      from: "noreply@chesstutoring.com",
+      to: email,
+      subject: "Add to Calendar - Chess Lesson Booking",
+      html: `<p>You can import the attached calendar file into Google Calendar, Outlook, or Apple Calendar.</p>`,
+      attachments: [
+        {
+          filename: `chess-lesson-${date}.ics`,
+          content: cal.toString(),
+        },
+      ],
     });
 
     return Response.json({
       success: true,
       booking,
-      message: "Booking confirmed. Emails sent and calendar event created.",
+      message: "Booking confirmed. Emails sent, Discord notification delivered, and calendar file created.",
     });
   } catch (error) {
     console.error("Booking error:", error);
