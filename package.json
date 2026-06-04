@@ -11,12 +11,11 @@
   "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "latest",
-    "@tailwindcss/postcss": "latest",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
     "resend": "latest",
-    "tailwindcss": "latest"
+    "tailwindcss": "^3.4.0"
   },
   "devDependencies": {
     "@types/node": "25.9.1",
