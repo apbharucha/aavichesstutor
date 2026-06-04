@@ -45,7 +45,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { password, action, date, timeSlots } = body;
+    const { password, action, date, timeSlots, slots } = body;
 
     if (password !== ADMIN_PASSWORD) {
       return Response.json({ error: "Invalid password" }, { status: 401 });
@@ -54,7 +54,6 @@ export async function POST(req: Request) {
     const supabase = getSupabaseClient();
 
     if (action === "set_available") {
-      // Set specific date/time slots as available
       const slotsToInsert = timeSlots.map((time: string) => ({
         date,
         time_slot: time,
@@ -71,8 +70,20 @@ export async function POST(req: Request) {
       return Response.json({ success: true, message: "Availability updated" });
     }
 
+    if (action === "update_booked_status") {
+      // Update booked status for each slot
+      for (const slot of slots) {
+        await supabase
+          .from("availability")
+          .update({ is_booked: slot.booked })
+          .eq("date", date)
+          .eq("time_slot", slot.slot);
+      }
+
+      return Response.json({ success: true, message: "Booked status updated" });
+    }
+
     if (action === "remove_date") {
-      // Remove a date from availability
       const { error } = await supabase
         .from("availability")
         .delete()
@@ -84,10 +95,9 @@ export async function POST(req: Request) {
     }
 
     if (action === "block_date") {
-      // Block an entire date
       const { error } = await supabase
         .from("availability")
-        .update({ is_available: false })
+        .delete()
         .eq("date", date);
 
       if (error) throw error;

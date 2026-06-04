@@ -4,30 +4,32 @@ import Image from "next/image";
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
-      <nav className="border-b border-white/10 bg-black/20 px-6 py-4">
+      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#07111f]/95 backdrop-blur-md px-6 py-4">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
           <Link href="/" className="text-2xl font-semibold">
             Aavi Chess Tutor
           </Link>
           <div className="flex gap-6">
-            <Link href="/" className="text-slate-300 hover:text-white">Home</Link>
-            <Link href="/lessons" className="text-slate-300 hover:text-white">Lessons</Link>
-            <Link href="/faq" className="text-slate-300 hover:text-white">FAQ</Link>
+            <Link href="/" className="text-slate-300 hover:text-white transition">Home</Link>
+            <Link href="/lessons" className="text-slate-300 hover:text-white transition">Lessons</Link>
+            <Link href="/faq" className="text-slate-300 hover:text-white transition">FAQ</Link>
+            <a href="/#booking" className="text-slate-300 hover:text-white transition">Book</a>
           </div>
         </div>
       </nav>
 
       <section className="mx-auto max-w-7xl px-6 py-20">
-        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <div className="aspect-[4/5] rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(59,130,246,0.35),rgba(234,179,8,0.18))] overflow-hidden">
+        <div className="grid gap-8 lg:grid-cols-[1fr_1.2fr]">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 h-fit">
+            <div className="aspect-[3/4] rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(59,130,246,0.35),rgba(234,179,8,0.18))] overflow-hidden">
               <Image
                 src="/aavi-nationals.jpg"
                 alt="Aavi at K-8 Nationals in Atlanta"
-                width={400}
-                height={500}
+                width={600}
+                height={800}
                 className="w-full h-full object-cover"
                 priority
+                quality={95}
               />
             </div>
             <p className="mt-4 text-center text-sm text-slate-400">
@@ -48,7 +50,7 @@ export default function AboutPage() {
               Hi, I'm Aavi. I help beginner and intermediate players improve their tactical vision, positional understanding, opening preparation, and endgame technique through personalized lessons.
             </p>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {[
                 ["Chess.com Rating", "2100"],
                 ["USCF Rating", "1700"],

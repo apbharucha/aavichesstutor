@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 const TIME_SLOTS = [
@@ -23,16 +23,39 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
+  const [existingSlots, setExistingSlots] = useState<Record<string, { slot: string; booked: boolean }[]>>({});
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (isAuthenticated && selectedDate) {
+      fetchExistingSlots();
+    }
+  }, [selectedDate, isAuthenticated]);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === process.env.NEXT_PUBLIC_ADMIN_PASSWORD || password === "aavi123") {
+    if (password === "aavi123") {
       setIsAuthenticated(true);
       setMessage("Logged in successfully");
+      setPassword("");
     } else {
       setMessage("Invalid password");
+    }
+  };
+
+  const fetchExistingSlots = async () => {
+    try {
+      const response = await fetch(`/api/availability?date=${selectedDate}`);
+      const data = await response.json();
+      if (data.availableSlots) {
+        setExistingSlots((prev) => ({
+          ...prev,
+          [selectedDate]: data.availableSlots.map((slot: string) => ({ slot, booked: false })),
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch slots:", error);
     }
   };
 
@@ -40,6 +63,15 @@ export default function AdminPage() {
     setSelectedSlots((prev) =>
       prev.includes(slot) ? prev.filter((s) => s !== slot) : [...prev, slot]
     );
+  };
+
+  const toggleSlotBooked = (slot: string) => {
+    setExistingSlots((prev) => ({
+      ...prev,
+      [selectedDate]: (prev[selectedDate] || []).map((s) =>
+        s.slot === slot ? { ...s, booked: !s.booked } : s
+      ),
+    }));
   };
 
   const handleSetAvailable = async (e: React.FormEvent) => {
@@ -66,6 +98,38 @@ export default function AdminPage() {
 
       setMessage(`✓ Made ${selectedDate} available with ${selectedSlots.length} slots`);
       setSelectedSlots([]);
+      fetchExistingSlots();
+    } catch (error) {
+      setMessage(`Error: ${error instanceof Error ? error.message : "Failed to update"}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateSlots = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedDate) {
+      setMessage("Please select a date");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const slots = existingSlots[selectedDate] || [];
+      const response = await fetch("/api/availability", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          password,
+          action: "update_booked_status",
+          date: selectedDate,
+          slots: slots,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update slots");
+
+      setMessage(`✓ Updated booked status for ${selectedDate}`);
     } catch (error) {
       setMessage(`Error: ${error instanceof Error ? error.message : "Failed to update"}`);
     } finally {
@@ -96,6 +160,10 @@ export default function AdminPage() {
 
       setMessage(`✓ Blocked ${selectedDate} from bookings`);
       setSelectedSlots([]);
+      setExistingSlots((prev) => ({
+        ...prev,
+        [selectedDate]: [],
+      }));
     } catch (error) {
       setMessage(`Error: ${error instanceof Error ? error.message : "Failed to block"}`);
     } finally {
@@ -139,13 +207,18 @@ export default function AdminPage() {
     );
   }
 
+  const dateSlots = existingSlots[selectedDate] || [];
+
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
-      <nav className="border-b border-white/10 bg-black/20 px-6 py-4">
+      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#07111f]/95 backdrop-blur-md px-6 py-4">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
           <button
-            onClick={() => setIsAuthenticated(false)}
+            onClick={() => {
+              setIsAuthenticated(false);
+              setPassword("");
+            }}
             className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm transition hover:bg-white/10"
           >
             Logout
@@ -153,12 +226,12 @@ export default function AdminPage() {
         </div>
       </nav>
 
-      <section className="mx-auto max-w-4xl px-6 py-20">
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* Set Available Slots */}
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Add Available Slots */}
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-2xl font-semibold">Add Available Slots</h2>
-            <p className="mt-2 text-slate-300">Set which dates and times are available for booking</p>
+            <p className="mt-2 text-slate-300 text-sm">Create new availability</p>
 
             <form onSubmit={handleSetAvailable} className="mt-6 space-y-4">
               <label className="grid gap-2">
@@ -173,7 +246,7 @@ export default function AdminPage() {
 
               <div>
                 <span className="text-sm text-slate-300">Time Slots</span>
-                <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="mt-3 grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
                   {TIME_SLOTS.map((slot) => (
                     <button
                       key={slot}
@@ -196,7 +269,57 @@ export default function AdminPage() {
                 disabled={loading}
                 className="w-full rounded-2xl bg-green-500 px-6 py-3 font-semibold text-white transition hover:bg-green-400 disabled:opacity-50"
               >
-                {loading ? "Updating..." : "Set Available"}
+                {loading ? "Adding..." : "Add Available"}
+              </button>
+            </form>
+          </div>
+
+          {/* Edit Booked Status */}
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+            <h2 className="text-2xl font-semibold">Edit Booked Status</h2>
+            <p className="mt-2 text-slate-300 text-sm">Mark slots as booked/available</p>
+
+            <form onSubmit={handleUpdateSlots} className="mt-6 space-y-4">
+              <label className="grid gap-2">
+                <span className="text-sm text-slate-300">Select Date</span>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="rounded-2xl border border-white/10 bg-[#07111f] px-4 py-3 outline-none"
+                />
+              </label>
+
+              {dateSlots.length > 0 ? (
+                <div>
+                  <span className="text-sm text-slate-300">Toggle Booked Status</span>
+                  <div className="mt-3 space-y-2 max-h-48 overflow-y-auto">
+                    {dateSlots.map((item) => (
+                      <button
+                        key={item.slot}
+                        type="button"
+                        onClick={() => toggleSlotBooked(item.slot)}
+                        className={`w-full text-left rounded-2xl px-4 py-2 font-medium transition ${
+                          item.booked
+                            ? "bg-red-500/20 border border-red-500/30 text-red-100"
+                            : "bg-green-500/20 border border-green-500/30 text-green-100"
+                        }`}
+                      >
+                        {item.slot} — {item.booked ? "BOOKED" : "AVAILABLE"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-400">No slots for this date</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || dateSlots.length === 0}
+                className="w-full rounded-2xl bg-blue-500 px-6 py-3 font-semibold text-white transition hover:bg-blue-400 disabled:opacity-50"
+              >
+                {loading ? "Updating..." : "Update Status"}
               </button>
             </form>
           </div>
@@ -204,7 +327,7 @@ export default function AdminPage() {
           {/* Block Date */}
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-2xl font-semibold">Block Date</h2>
-            <p className="mt-2 text-slate-300">Remove a date from all bookings (e.g., vacation days)</p>
+            <p className="mt-2 text-slate-300 text-sm">Remove all availability</p>
 
             <form onSubmit={handleBlockDate} className="mt-6 space-y-4">
               <label className="grid gap-2">
