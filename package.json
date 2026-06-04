@@ -11,6 +11,7 @@
   "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "latest",
+    "@tailwindcss/postcss": "latest",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
