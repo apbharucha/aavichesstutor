@@ -101,6 +101,21 @@ export default function ChessCoachLandingPage() {
 
   return (
     <main className="min-h-screen bg-[#07111f] text-white">
+      {/* Navigation */}
+      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#07111f]/95 backdrop-blur-md px-6 py-4">
+        <div className="mx-auto max-w-7xl flex items-center justify-between">
+          <Link href="/" className="text-2xl font-semibold">
+            Aavi Chess Tutor
+          </Link>
+          <div className="flex gap-6">
+            <Link href="/about" className="text-slate-300 hover:text-white transition">About</Link>
+            <Link href="/lessons" className="text-slate-300 hover:text-white transition">Lessons</Link>
+            <Link href="/faq" className="text-slate-300 hover:text-white transition">FAQ</Link>
+            <a href="#booking" className="text-slate-300 hover:text-white transition">Book</a>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top,rgba(255,215,0,0.16),transparent_34%),linear-gradient(180deg,#0a1730_0%,#07111f_100%)]">
         <div className="absolute inset-0 opacity-25">
