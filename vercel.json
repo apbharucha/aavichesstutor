@@ -4,38 +4,16 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": {
-      "description": "Supabase project URL"
-    },
-    "SUPABASE_SERVICE_ROLE_KEY": {
-      "description": "Supabase service role key"
-    },
-    "RESEND_API_KEY": {
-      "description": "Resend API key for emails"
-    },
-    "TWILIO_ACCOUNT_SID": {
-      "description": "Twilio account SID"
-    },
-    "TWILIO_AUTH_TOKEN": {
-      "description": "Twilio auth token"
-    },
-    "TWILIO_PHONE_NUMBER": {
-      "description": "Twilio phone number"
-    },
-    "AAVI_PHONE_NUMBER": {
-      "description": "Aavi phone number"
-    },
-    "GOOGLE_CLIENT_ID": {
-      "description": "Google client ID"
-    },
-    "GOOGLE_CLIENT_SECRET": {
-      "description": "Google client secret"
-    },
-    "GOOGLE_REDIRECT_URI": {
-      "description": "Google redirect URI"
-    },
-    "GOOGLE_REFRESH_TOKEN": {
-      "description": "Google refresh token"
-    }
+    "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
+    "RESEND_API_KEY": "@resend_api_key",
+    "TWILIO_ACCOUNT_SID": "@twilio_account_sid",
+    "TWILIO_AUTH_TOKEN": "@twilio_auth_token",
+    "TWILIO_PHONE_NUMBER": "@twilio_phone_number",
+    "AAVI_PHONE_NUMBER": "@aavi_phone_number",
+    "GOOGLE_CLIENT_ID": "@google_client_id",
+    "GOOGLE_CLIENT_SECRET": "@google_client_secret",
+    "GOOGLE_REDIRECT_URI": "@google_redirect_uri",
+    "GOOGLE_REFRESH_TOKEN": "@google_refresh_token"
   }
 }
